@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitHub to ESP32 Gesture Controller</title>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3"></script>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #1a1a1a; color: white; display: flex; flex-direction: column; align-items: center; }
+    #header { width: 100%; padding: 15px; background: #333; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+    #video-container { position: relative; margin-top: 20px; border: 2px solid #555; border-radius: 10px; overflow: hidden; width: 90%; max-width: 500px; }
+    video { width: 100%; display: block; transform: scaleX(-1); } /* Mirror view */
+    canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; transform: scaleX(-1); }
+    #ui { margin-top: 20px; text-align: center; width: 90%; }
+    .status-box { padding: 10px; margin: 5px; border-radius: 5px; background: #444; font-size: 0.9em; }
+    .gesture-display { font-size: 2em; color: #00ffcc; font-weight: bold; margin: 10px 0; min-height: 1.2em; }
+    .connected { color: #00ff00; }
+    .disconnected { color: #ff3333; }
+  </style>
+</head>
+<body>
+
+  <div id="header">
+    <h3>ESP32 Bot Controller</h3>
+  </div>
+
+  <div id="video-container">
+    <video id="webcam" autoplay playsinline></video>
+    <canvas id="output_canvas"></canvas>
+  </div>
+
+  <div id="ui">
+    <div id="ws-status" class="status-box disconnected">ESP32 Status: Disconnected</div>
+    <div class="status-box">Current Gesture: <div id="gesture-label" class="gesture-display">Detecting...</div></div>
+  </div>
+
+  <script type="module">
+    import { GestureRecognizer, FilesetResolver, DrawingUtils } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3";
+
+    const video = document.getElementById("webcam");
+    const canvasElement = document.getElementById("output_canvas");
+    const canvasCtx = canvasElement.getContext("2d");
+    const gestureLabel = document.getElementById("gesture-label");
+    const wsStatus = document.getElementById("ws-status");
+
+    let gestureRecognizer;
+    let socket;
+    let lastCommand = "";
+
+    // 1. Connect to ESP32 via WebSocket
+    function initWebSocket() {
+      // Hardcoded ESP32 Access Point IP
+      socket = new WebSocket('ws://192.168.4.1/ws');
+      
+      socket.onopen = () => {
+        wsStatus.innerText = "ESP32 Status: Connected";
+        wsStatus.className = "status-box connected";
+      };
+      
+      socket.onclose = () => {
+        wsStatus.innerText = "ESP32 Status: Disconnected (Retrying...)";
+        wsStatus.className = "status-box disconnected";
+        setTimeout(initWebSocket, 3000);
+      };
+    }
+
+    // 2. Setup MediaPipe using local .task file from your GitHub Repo
+    async function setupAI() {
+      const vision = await FilesetResolver.forVisionTasks(
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm"
+      );
+      
+      gestureRecognizer = await GestureRecognizer.createFromOptions(vision, {
+        baseOptions: {
+          // This must match the filename uploaded to your GitHub folder
+          modelAssetPath: "gesture_recognizer.task", 
+          delegate: "GPU"
+        },
+        runningMode: "VIDEO"
+      });
+      
+      startWebcam();
+    }
+
+    function startWebcam() {
+      const constraints = { video: { facingMode: "user" } };
+      navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
+        video.srcObject = stream;
+        video.addEventListener("loadeddata", predictLoop);
+      });
+    }
+
+    // 3. Mapping Table
+    const commandMap = {
+      "Thumb_Up": "F",
+      "Thumb_Down": "B",
+      "Pointing_Up": "L",
+      "Victory": "R",
+      "Closed_Fist": "S",
+      "ILoveYou": "TL",
+      "Open_Palm": "TR"
+    };
+
+    async function predictLoop() {
+      canvasElement.width = video.videoWidth;
+      canvasElement.height = video.videoHeight;
+
+      const results = gestureRecognizer.recognizeForVideo(video, Date.now());
+
+      canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+      const drawingUtils = new DrawingUtils(canvasCtx);
+
+      if (results.gestures.length > 0) {
+        const gesture = results.gestures[0][0].categoryName;
+        gestureLabel.innerText = gesture;
+
+        const cmd = commandMap[gesture] || "S";
+
+        // Send command only on change to prevent network spam
+        if (cmd !== lastCommand && socket && socket.readyState === WebSocket.OPEN) {
+          socket.send(cmd);
+          lastCommand = cmd;
+          console.log("Sent to Bot:", cmd);
+        }
+      } else {
+        gestureLabel.innerText = "None";
+      }
+
+      window.requestAnimationFrame(predictLoop);
+    }
+
+    // Start everything
+    initWebSocket();
+    setupAI();
+  </script>
+</body>
+</html>
