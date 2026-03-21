@@ -1,132 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gesture Bot Console</title>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3"></script>
-  <style>
-    body { font-family: sans-serif; margin: 0; background: #121212; color: white; display: flex; flex-direction: column; align-items: center; }
-    #video-container { position: relative; margin-top: 10px; width: 90%; max-width: 400px; border: 2px solid #444; }
-    video { width: 100%; transform: scaleX(-1); }
-    .status-card { width: 90%; max-width: 400px; padding: 15px; margin-top: 10px; background: #222; border-radius: 8px; }
-    #debug-console { width: 90%; max-width: 400px; height: 80px; background: #000; color: #0f0; font-family: monospace; font-size: 0.8rem; overflow-y: auto; margin-top: 10px; padding: 5px; border: 1px solid #333; }
-    .ip-group { display: flex; gap: 5px; margin-top: 10px; }
-    input { flex: 1; padding: 8px; background: #333; color: #fff; border: 1px solid #555; }
-    button { padding: 8px 15px; background: #6200ee; color: white; border: none; cursor: pointer; }
-    .connected { border-left: 5px solid #00ff00; }
-    .disconnected { border-left: 5px solid #ff0000; }
-  </style>
+<meta charset="UTF-8">
+<title>Gesture → ESP32 Control</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="style.css">
+
 </head>
 <body>
 
-  <div id="video-container">
-    <video id="webcam" autoplay playsinline></video>
-  </div>
+<h2>Gesture Control ESP32</h2>
 
-  <div id="ws-card" class="status-card disconnected">
-    <div id="ws-status">Status: Disconnected</div>
-    <div class="ip-group">
-      <input type="text" id="esp-ip" placeholder="10.93.3.1">
-      <button id="connect-btn">Connect</button>
-    </div>
-  </div>
+<video id="webcam" autoplay playsinline></video>
+<canvas id="output"></canvas>
 
-  <div class="status-card">
-    Gesture: <span id="gesture-label" style="color:#00ffcc; font-weight:bold;">None</span>
-  </div>
+<div id="info">
+  <p>Gesture: <span id="gesture">None</span></p>
+  <p>FPS: <span id="fps">0</span></p>
+</div>
 
-  <div id="debug-console">System Log: Ready...</div>
+<script type="module" src="script.js"></script>
 
-  <script type="module">
-    import { GestureRecognizer, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3";
-
-    const video = document.getElementById("webcam");
-    const gestureLabel = document.getElementById("gesture-label");
-    const wsStatus = document.getElementById("ws-status");
-    const debug = document.getElementById("debug-console");
-    const ipInput = document.getElementById("esp-ip");
-    const connectBtn = document.getElementById("connect-btn");
-
-    let gestureRecognizer;
-    let socket;
-    let lastCommand = "";
-
-    function log(msg) {
-      debug.innerHTML += "<br>> " + msg;
-      debug.scrollTop = debug.scrollHeight;
-    }
-
-    // 1. WebSocket Logic
-    function connectToESP() {
-      const ip = ipInput.value.trim();
-      if (!ip) return alert("Enter IP!");
-
-      log("Attempting connection to " + ip);
-      if (socket) socket.close();
-      
-      try {
-        socket = new WebSocket(`ws://${ip}/ws`);
-
-        socket.onopen = () => {
-          log("SUCCESS: Connected to Bot");
-          wsStatus.innerText = "Status: Connected";
-          document.getElementById("ws-card").className = "status-card connected";
-        };
-
-        socket.onerror = (err) => {
-          log("ERR: Check Chrome Flags & IP");
-          wsStatus.innerText = "Status: Connection Failed";
-        };
-
-        socket.onclose = (e) => {
-          log("Connection Closed. Code: " + e.code);
-          wsStatus.innerText = "Status: Disconnected";
-          document.getElementById("ws-card").className = "status-card disconnected";
-        };
-      } catch (e) {
-        log("System Error: " + e.message);
-      }
-    }
-
-    connectBtn.addEventListener("click", connectToESP);
-
-    // 2. MediaPipe Logic
-    async function initAI() {
-      log("Loading AI Model...");
-      const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm");
-      gestureRecognizer = await GestureRecognizer.createFromOptions(vision, {
-        baseOptions: { modelAssetPath: "gesture_recognizer.task", delegate: "GPU" },
-        runningMode: "VIDEO"
-      });
-      log("AI Ready. Starting Camera...");
-      startCamera();
-    }
-
-    function startCamera() {
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } }).then((stream) => {
-        video.srcObject = stream;
-        video.addEventListener("loadeddata", predictLoop);
-      }).catch(err => log("Camera Error: " + err.name));
-    }
-
-    const commandMap = { "Thumb_Up": "F", "Thumb_Down": "B", "Pointing_Up": "L", "Victory": "R", "Closed_Fist": "S", "ILoveYou": "TL", "Open_Palm": "TR" };
-
-    async function predictLoop() {
-      const results = gestureRecognizer.recognizeForVideo(video, Date.now());
-      if (results.gestures.length > 0) {
-        const gesture = results.gestures[0][0].categoryName;
-        gestureLabel.innerText = gesture;
-        const cmd = commandMap[gesture] || "S";
-        if (cmd !== lastCommand && socket && socket.readyState === WebSocket.OPEN) {
-          socket.send(cmd);
-          lastCommand = cmd;
-        }
-      }
-      window.requestAnimationFrame(predictLoop);
-    }
-
-    initAI();
-  </script>
 </body>
 </html>
