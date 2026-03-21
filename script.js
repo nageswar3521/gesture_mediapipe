@@ -67,25 +67,43 @@ async function init() {
     }
   }
 
+  // ================= GESTURE MAPPING =================
   function mapGesture(gesture) {
+
+    // AUTO STOP (SAFETY)
+    if (gesture === "None") {
+      sendCommand("stop");
+      return;
+    }
+
     if (gesture === "Thumb_Up") sendCommand("forward");
     else if (gesture === "Thumb_Down") sendCommand("backward");
     else if (gesture === "Open_Palm") sendCommand("stop");
-    else if (gesture === "Pointing_Up") sendCommand("left");
-    else if (gesture === "Victory") sendCommand("right");
+
+    // CURVE MOVEMENT
+    else if (gesture === "Pointing_Up") sendCommand("move_left");
+    else if (gesture === "Victory") sendCommand("move_right");
+
+    // ROTATION
+    else if (gesture === "Closed_Fist") sendCommand("turn_left");
+    else if (gesture === "ILoveYou") sendCommand("turn_right");
   }
 
+  // ================= ICON =================
   function getGestureIcon(gesture) {
     switch (gesture) {
-      case "Thumb_Up": return "👍";
-      case "Thumb_Down": return "👎";
-      case "Open_Palm": return "✋";
-      case "Victory": return "✌️";
-      case "Pointing_Up": return "☝️";
+      case "Thumb_Up": return "⬆️";
+      case "Thumb_Down": return "⬇️";
+      case "Open_Palm": return "⛔";
+      case "Pointing_Up": return "↖️";
+      case "Victory": return "↗️";
+      case "Closed_Fist": return "⟲";
+      case "ILoveYou": return "⟳";
       default: return "❓";
     }
   }
 
+  // ================= SMOOTHING =================
   function smoothGesture(gesture) {
     gestureHistory.push(gesture);
     if (gestureHistory.length > 5) gestureHistory.shift();
