@@ -1,8 +1,8 @@
 body {
     margin: 0;
-    background: black;
-    font-family: Arial, sans-serif;
     overflow: hidden;
+    font-family: 'Segoe UI', sans-serif;
+    background: black;
 }
 
 #container {
@@ -23,17 +23,52 @@ canvas {
     height: 100%;
 }
 
+/* Status */
+#status {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    background: red;
+    color: white;
+}
+
+.connected {
+    background: #00c853 !important;
+}
+
 /* Info Panel */
 #info {
     position: absolute;
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(0,0,0,0.6);
-    padding: 12px 20px;
-    border-radius: 15px;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(15px);
+    padding: 15px 25px;
+    border-radius: 20px;
     color: white;
-    font-size: 16px;
     text-align: center;
-    backdrop-filter: blur(10px);
+    width: 85%;
+    max-width: 400px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+}
+
+#icon {
+    font-size: 40px;
+    margin-bottom: 5px;
+}
+
+#gesture {
+    font-size: 22px;
+    font-weight: bold;
+    color: #00ffcc;
+}
+
+#fps {
+    font-size: 14px;
+    color: #ccc;
 }

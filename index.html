@@ -6,32 +6,26 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link rel="stylesheet" href="style.css">
-
-<style>
-/* Prevent scrolling on mobile */
-body {
-  margin: 0;
-  overflow: hidden;
-  background: black;
-}
-</style>
-
 </head>
 
 <body>
 
 <div id="container">
 
-    <!-- Hidden video (used only for processing) -->
+    <!-- Hidden video -->
     <video id="webcam" autoplay playsinline></video>
 
-    <!-- Canvas (main display) -->
+    <!-- Main display -->
     <canvas id="output"></canvas>
 
-    <!-- Info panel -->
+    <!-- Status -->
+    <div id="status">DISCONNECTED</div>
+
+    <!-- Info Panel -->
     <div id="info">
-        <div>Gesture: <span id="gesture">None</span></div>
-        <div>FPS: <span id="fps">0</span></div>
+        <div id="icon">✋</div>
+        <div id="gesture">None</div>
+        <div id="fps">0 FPS</div>
     </div>
 
 </div>
