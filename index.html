@@ -7,17 +7,33 @@
 
 <link rel="stylesheet" href="style.css">
 
+<style>
+/* Prevent scrolling on mobile */
+body {
+  margin: 0;
+  overflow: hidden;
+  background: black;
+}
+</style>
+
 </head>
+
 <body>
 
-<h2>Gesture Control ESP32</h2>
+<div id="container">
 
-<video id="webcam" autoplay playsinline></video>
-<canvas id="output"></canvas>
+    <!-- Hidden video (used only for processing) -->
+    <video id="webcam" autoplay playsinline></video>
 
-<div id="info">
-  <p>Gesture: <span id="gesture">None</span></p>
-  <p>FPS: <span id="fps">0</span></p>
+    <!-- Canvas (main display) -->
+    <canvas id="output"></canvas>
+
+    <!-- Info panel -->
+    <div id="info">
+        <div>Gesture: <span id="gesture">None</span></div>
+        <div>FPS: <span id="fps">0</span></div>
+    </div>
+
 </div>
 
 <script type="module" src="script.js"></script>

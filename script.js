@@ -16,9 +16,10 @@ let lastCommand = "";
 let lastTime = performance.now();
 let gestureHistory = [];
 
+// ================= CAMERA =================
 async function setupCamera() {
   const stream = await navigator.mediaDevices.getUserMedia({
-    video: true
+    video: { facingMode: "user" }
   });
   video.srcObject = stream;
 
@@ -27,6 +28,7 @@ async function setupCamera() {
   });
 }
 
+// ================= INIT =================
 async function init() {
   const vision = await FilesetResolver.forVisionTasks(
     "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
@@ -45,12 +47,13 @@ async function init() {
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
 
+  // ================= ESP32 =================
   async function sendCommand(cmd) {
     if (cmd === lastCommand) return;
 
     try {
-      const res = await fetch(`${ESP32_IP}/${cmd}`);
-      console.log("Sent:", cmd, res.status);
+      await fetch(`${ESP32_IP}/${cmd}`);
+      console.log("Sent:", cmd);
       lastCommand = cmd;
     } catch (err) {
       console.log("ESP32 error:", err);
@@ -75,10 +78,57 @@ async function init() {
     ).pop();
   }
 
-  async function loop() {
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  // ================= DRAW HAND =================
+  function drawHand(landmarks) {
+    const connections = [
+      [0,1],[1,2],[2,3],[3,4],
+      [0,5],[5,6],[6,7],[7,8],
+      [5,9],[9,10],[10,11],[11,12],
+      [9,13],[13,14],[14,15],[15,16],
+      [13,17],[17,18],[18,19],[19,20],
+      [0,17]
+    ];
 
+    ctx.strokeStyle = "cyan";
+    ctx.lineWidth = 3;
+
+    // Draw lines
+    connections.forEach(([i, j]) => {
+      const x1 = landmarks[i].x * canvas.width;
+      const y1 = landmarks[i].y * canvas.height;
+
+      const x2 = landmarks[j].x * canvas.width;
+      const y2 = landmarks[j].y * canvas.height;
+
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    });
+
+    // Draw points
+    ctx.fillStyle = "yellow";
+    landmarks.forEach(pt => {
+      const x = pt.x * canvas.width;
+      const y = pt.y * canvas.height;
+
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, 2 * Math.PI);
+      ctx.fill();
+    });
+  }
+
+  // ================= LOOP =================
+  async function loop() {
     const now = performance.now();
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Mirror camera
+    ctx.save();
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+    ctx.restore();
 
     const result = recognizer.recognizeForVideo(video, now);
 
@@ -91,8 +141,12 @@ async function init() {
     const stableGesture = smoothGesture(gesture);
 
     mapGesture(stableGesture);
-
     gestureText.innerText = stableGesture;
+
+    // Draw hand
+    if (result.landmarks.length > 0) {
+      drawHand(result.landmarks[0]);
+    }
 
     const fps = 1000 / (now - lastTime);
     lastTime = now;
