@@ -10,6 +10,7 @@ const ctx = canvas.getContext("2d");
 const gestureText = document.getElementById("gesture");
 const fpsText = document.getElementById("fps");
 
+// 👉 CHANGE THIS to your ESP32 IP
 const ESP32_IP = "http://192.168.29.119";
 
 let lastCommand = "";
@@ -72,14 +73,15 @@ async function init() {
     gestureHistory.push(gesture);
     if (gestureHistory.length > 5) gestureHistory.shift();
 
-    return gestureHistory.sort((a,b) =>
-      gestureHistory.filter(v => v===a).length -
-      gestureHistory.filter(v => v===b).length
+    return gestureHistory.sort((a, b) =>
+      gestureHistory.filter(v => v === a).length -
+      gestureHistory.filter(v => v === b).length
     ).pop();
   }
 
-  // ================= DRAW HAND =================
+  // ================= DRAW HAND (FIXED MIRROR) =================
   function drawHand(landmarks) {
+
     const connections = [
       [0,1],[1,2],[2,3],[3,4],
       [0,5],[5,6],[6,7],[7,8],
@@ -92,12 +94,14 @@ async function init() {
     ctx.strokeStyle = "cyan";
     ctx.lineWidth = 3;
 
+    const mirrorX = (x) => canvas.width - (x * canvas.width);
+
     // Draw lines
     connections.forEach(([i, j]) => {
-      const x1 = landmarks[i].x * canvas.width;
+      const x1 = mirrorX(landmarks[i].x);
       const y1 = landmarks[i].y * canvas.height;
 
-      const x2 = landmarks[j].x * canvas.width;
+      const x2 = mirrorX(landmarks[j].x);
       const y2 = landmarks[j].y * canvas.height;
 
       ctx.beginPath();
@@ -109,7 +113,7 @@ async function init() {
     // Draw points
     ctx.fillStyle = "yellow";
     landmarks.forEach(pt => {
-      const x = pt.x * canvas.width;
+      const x = mirrorX(pt.x);
       const y = pt.y * canvas.height;
 
       ctx.beginPath();
@@ -148,6 +152,7 @@ async function init() {
       drawHand(result.landmarks[0]);
     }
 
+    // FPS
     const fps = 1000 / (now - lastTime);
     lastTime = now;
     fpsText.innerText = fps.toFixed(1);
