@@ -1,10 +1,12 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Gesture → ESP32 Control</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 
@@ -12,21 +14,43 @@
 
 <div id="container">
 
-    <!-- Hidden video -->
-    <video id="webcam" autoplay playsinline></video>
+```
+<!-- Webcam -->
+<video id="webcam" autoplay playsinline></video>
 
-    <!-- Main display -->
-    <canvas id="output"></canvas>
+<!-- Canvas -->
+<canvas id="output"></canvas>
 
-    <!-- Status -->
-    <div id="status">DISCONNECTED</div>
+<!-- Status -->
+<div id="status">🔴 DISCONNECTED</div>
 
-    <!-- Info Panel -->
-    <div id="info">
-        <div id="icon">✋</div>
-        <div id="gesture">None</div>
-        <div id="fps">0 FPS</div>
-    </div>
+<!-- Info -->
+<div id="info">
+    <div id="icon">✋</div>
+    <div id="gesture">Initializing...</div>
+    <div id="fps">0 FPS</div>
+</div>
+
+<!-- Loading -->
+<div id="loading">Starting Camera...</div>
+
+<!-- Help Button -->
+<div id="helpBtn">❓</div>
+
+<!-- Help Panel -->
+<div id="helpPanel">
+  <h3>Gesture Guide</h3>
+  <ul>
+    <li>👍 Forward</li>
+    <li>👎 Backward</li>
+    <li>✋ Stop</li>
+    <li>☝️ Move Left</li>
+    <li>✌️ Move Right</li>
+    <li>✊ Turn Left</li>
+    <li>🤟 Turn Right</li>
+  </ul>
+</div>
+```
 
 </div>
 
