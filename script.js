@@ -67,7 +67,7 @@ if (cmd === lastCommand) return;
 
 ```
 try {
-  await fetch(`${ESP32_IP}/${cmd}`, { mode: "no-cors" });
+  await fetch(`${ESP32_IP}/${cmd}`);
   lastCommand = cmd;
   statusBox.innerText = "🟢 CONNECTED";
   statusBox.classList.add("connected");
