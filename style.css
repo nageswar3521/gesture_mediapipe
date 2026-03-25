@@ -5,41 +5,47 @@ font-family: 'Poppins', sans-serif;
 background: black;
 }
 
+/* Container */
 #container {
 position: relative;
 width: 100vw;
 height: 100vh;
 }
 
+/* Hide webcam */
 video {
 display: none;
 }
 
+/* Canvas */
 canvas {
 position: absolute;
 width: 100%;
 height: 100%;
 }
 
-/* STATUS */
+/* ================= STATUS ================= */
 #status {
 position: absolute;
-top: 60px;
+top: 20px; /* 🔼 moved higher */
 right: 20px;
-padding: 8px 16px;
+padding: 10px 18px;
 border-radius: 25px;
 font-size: 12px;
 font-weight: 600;
 background: rgba(255, 0, 0, 0.8);
 color: white;
-backdrop-filter: blur(10px);
+backdrop-filter: blur(12px);
+z-index: 20;
+transition: all 0.3s ease;
 }
 
 .connected {
 background: rgba(0, 200, 83, 0.9) !important;
+box-shadow: 0 0 12px #00c853;
 }
 
-/* INFO PANEL */
+/* ================= INFO PANEL ================= */
 #info {
 position: absolute;
 bottom: 25px;
@@ -53,27 +59,32 @@ color: white;
 text-align: center;
 width: 85%;
 max-width: 420px;
+z-index: 5;
 }
 
+/* Icon */
 #icon {
 font-size: 42px;
+transition: transform 0.2s ease;
 }
 
+/* Gesture text */
 #gesture {
 font-size: 24px;
 font-weight: 600;
 color: #00ffd5;
 }
 
+/* FPS */
 #fps {
 font-size: 13px;
 color: #aaa;
 }
 
-/* HELP BUTTON */
+/* ================= HELP BUTTON ================= */
 #helpBtn {
 position: absolute;
-bottom: 100px;
+bottom: 110px;
 right: 20px;
 background: rgba(0,0,0,0.6);
 color: white;
@@ -81,9 +92,16 @@ font-size: 22px;
 padding: 10px 14px;
 border-radius: 50%;
 cursor: pointer;
+backdrop-filter: blur(10px);
+z-index: 15;
+transition: transform 0.2s ease;
 }
 
-/* HELP MENU */
+#helpBtn:active {
+transform: scale(0.9);
+}
+
+/* ================= HELP MENU ================= */
 #helpMenu {
 position: absolute;
 bottom: 0;
@@ -94,10 +112,16 @@ padding: 20px;
 border-radius: 20px 20px 0 0;
 transform: translateY(100%);
 transition: transform 0.3s ease;
+z-index: 25; /* 🔥 above everything */
 }
 
 #helpMenu.active {
 transform: translateY(0);
+}
+
+#helpMenu h3 {
+text-align: center;
+margin-bottom: 10px;
 }
 
 #helpMenu ul {
@@ -106,20 +130,23 @@ padding: 0;
 }
 
 #helpMenu li {
-padding: 8px 0;
+padding: 10px 0;
 border-bottom: 1px solid #333;
+font-size: 15px;
 }
 
 #helpMenu button {
 width: 100%;
-margin-top: 10px;
-padding: 10px;
+margin-top: 12px;
+padding: 12px;
 background: #00ffd5;
 border: none;
 border-radius: 10px;
+font-weight: bold;
+font-size: 14px;
 }
 
-/* LOADING */
+/* ================= LOADING ================= */
 #loading {
 position: absolute;
 width: 100%;
@@ -129,4 +156,11 @@ color: white;
 display: flex;
 align-items: center;
 justify-content: center;
+font-size: 18px;
+z-index: 50;
+}
+
+/* ================= ANIMATION ================= */
+.gesture-active #icon {
+transform: scale(1.2);
 }
