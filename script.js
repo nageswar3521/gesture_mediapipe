@@ -15,7 +15,7 @@ const loading = document.getElementById("loading");
 const startBtn = document.getElementById("startBtn");
 
 // ✅ CHANGE IF NEEDED
-const ESP32_IP = "http://192.168.4.1";
+const ESP32_IP = "http://10.128.114.1";
 
 let recognizer;
 let lastCommand = "";
