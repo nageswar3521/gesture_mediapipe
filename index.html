@@ -1,58 +1,28 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Gesture → ESP32 Control</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<title>Gesture Control</title>
 <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<div id="container">
+<h2>🤖 Gesture Control</h2>
 
-```
-<!-- Webcam -->
+<div id="loading">Starting Camera...</div>
+
+<button id="startBtn">▶ Start Camera</button>
+
 <video id="webcam" autoplay playsinline></video>
-
-<!-- Canvas -->
 <canvas id="output"></canvas>
 
-<!-- Status -->
-<div id="status">🔴 DISCONNECTED</div>
-
-<!-- Info Panel -->
-<div id="info">
-    <div id="icon">✋</div>
-    <div id="gesture">Initializing...</div>
-    <div id="fps">0 FPS</div>
-</div>
-
-<!-- Help Button -->
-<div id="helpBtn">❓</div>
-
-<!-- Help Menu -->
-<div id="helpMenu">
-    <h3>Gesture Guide</h3>
-    <ul>
-        <li>👍 Thumb Up → Forward</li>
-        <li>👎 Thumb Down → Backward</li>
-        <li>✋ Open Palm → Stop</li>
-        <li>☝️ Point Up → Move Left</li>
-        <li>✌️ Victory → Move Right</li>
-        <li>✊ Fist → Turn Left</li>
-        <li>🤟 ILY → Turn Right</li>
-    </ul>
-    <button id="closeHelp">Close</button>
-</div>
-
-<!-- Loading -->
-<div id="loading">Starting Camera...</div>
-```
-
+<div class="info">
+  <p id="gesture">Gesture: -</p>
+  <p id="fps">FPS: -</p>
+  <p id="status">🔴 OFFLINE</p>
+  <div id="icon">❓</div>
 </div>
 
 <script type="module" src="script.js"></script>
