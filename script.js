@@ -21,6 +21,15 @@ const closeHelp = document.getElementById("closeHelp");
 helpBtn.onclick = () => helpMenu.classList.add("active");
 closeHelp.onclick = () => helpMenu.classList.remove("active");
 
+// Tap outside to close (mobile UX)
+window.addEventListener("click", (e) => {
+if (helpMenu.classList.contains("active") &&
+!helpMenu.contains(e.target) &&
+e.target !== helpBtn) {
+helpMenu.classList.remove("active");
+}
+});
+
 // ESP32 IP
 const ESP32_IP = "http://10.128.114.1";
 
@@ -64,14 +73,18 @@ canvas.height = video.videoHeight;
 
 loading.style.display = "none";
 
+// ================= ESP32 =================
 async function sendCommand(cmd) {
 if (cmd === lastCommand) return;
 
 ```
 try {
-  await fetch(`${ESP32_IP}/${cmd}`);
-  lastCommand = cmd;
+  await fetch(`${ESP32_IP}/${cmd}`, {
+    method: "GET",
+    mode: "no-cors"
+  });
 
+  lastCommand = cmd;
   statusBox.innerText = "🟢 CONNECTED";
   statusBox.classList.add("connected");
 
@@ -83,6 +96,7 @@ try {
 
 }
 
+// ================= GESTURE MAP =================
 function mapGesture(g) {
 if (g === "None") return sendCommand("stop");
 
@@ -98,6 +112,7 @@ else if (g === "ILoveYou") sendCommand("turn_right");
 
 }
 
+// ================= SMOOTHING =================
 function smoothGesture(g) {
 gestureHistory.push(g);
 if (gestureHistory.length > 7) gestureHistory.shift();
@@ -113,6 +128,7 @@ return Object.keys(count).reduce((a, b) =>
 
 }
 
+// ================= ICON =================
 function getIcon(g) {
 return {
 Thumb_Up: "⬆️",
@@ -125,6 +141,7 @@ ILoveYou: "⟳"
 }[g] || "❓";
 }
 
+// ================= HAND DRAW =================
 function drawHand(landmarks) {
 
 ```
@@ -141,7 +158,7 @@ for (let i = 0; i < landmarks.length; i++) {
     const x2 = mirrorX(landmarks[j].x);
     const y2 = landmarks[j].y * canvas.height;
 
-    if (Math.hypot(x1 - x2, y1 - y2) < 60) {
+    if (Math.hypot(x1 - x2, y1 - y2) < 55) {
       ctx.beginPath();
       ctx.moveTo(x1, y1);
       ctx.lineTo(x2, y2);
@@ -154,6 +171,7 @@ ctx.fillStyle = "cyan";
 landmarks.forEach(pt => {
   const x = mirrorX(pt.x);
   const y = pt.y * canvas.height;
+
   ctx.beginPath();
   ctx.arc(x, y, 3, 0, 2 * Math.PI);
   ctx.fill();
@@ -162,6 +180,7 @@ landmarks.forEach(pt => {
 
 }
 
+// ================= LOOP =================
 function loop() {
 
 ```
@@ -169,6 +188,7 @@ const now = performance.now();
 
 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+// Mirror camera
 ctx.save();
 ctx.scale(-1, 1);
 ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
@@ -187,19 +207,36 @@ if (result.gestures.length > 0) {
   noHandFrames++;
 }
 
-if (noHandFrames > 10) gesture = "None";
+// 🚨 Safety STOP
+if (noHandFrames > 10) {
+  gesture = "None";
+}
+
+// 🎯 Confidence filter
+if (confidence < 0.6) {
+  gesture = "None";
+}
 
 const stable = smoothGesture(gesture);
 
 mapGesture(stable);
 
+// UI update
 gestureText.innerText = `${stable} (${(confidence * 100).toFixed(0)}%)`;
 iconBox.innerText = getIcon(stable);
 
+// Animation trigger
+iconBox.parentElement.classList.add("gesture-active");
+setTimeout(() => {
+  iconBox.parentElement.classList.remove("gesture-active");
+}, 150);
+
+// Draw hand
 if (result.landmarks.length > 0) {
   drawHand(result.landmarks[0]);
 }
 
+// FPS
 const fps = 1000 / (now - lastTime);
 lastTime = now;
 fpsText.innerText = `${fps.toFixed(1)} FPS`;
