@@ -193,4 +193,4 @@ requestAnimationFrame(loop);
 loop();
 }
 
-init();
+init(console.log("Init started"));
