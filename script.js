@@ -13,9 +13,15 @@ const statusBox = document.getElementById("status");
 const iconBox = document.getElementById("icon");
 const loading = document.getElementById("loading");
 
+// HELP MENU
 const helpBtn = document.getElementById("helpBtn");
-const helpPanel = document.getElementById("helpPanel");
+const helpMenu = document.getElementById("helpMenu");
+const closeHelp = document.getElementById("closeHelp");
 
+helpBtn.onclick = () => helpMenu.classList.add("active");
+closeHelp.onclick = () => helpMenu.classList.remove("active");
+
+// ESP32 IP
 const ESP32_IP = "http://10.128.114.1";
 
 let lastCommand = "";
@@ -23,17 +29,12 @@ let lastTime = performance.now();
 let gestureHistory = [];
 let noHandFrames = 0;
 
-/* HELP TOGGLE */
-helpBtn.onclick = () => {
-helpPanel.style.display =
-helpPanel.style.display === "block" ? "none" : "block";
-};
-
-/* CAMERA */
+// CAMERA
 async function setupCamera() {
 const stream = await navigator.mediaDevices.getUserMedia({
 video: { facingMode: "user" }
 });
+
 video.srcObject = stream;
 
 return new Promise((resolve) => {
@@ -41,8 +42,9 @@ video.onloadedmetadata = () => resolve(video);
 });
 }
 
-/* INIT */
+// INIT
 async function init() {
+
 const vision = await FilesetResolver.forVisionTasks(
 "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
 );
@@ -67,10 +69,12 @@ if (cmd === lastCommand) return;
 
 ```
 try {
-  await fetch(`${ESP32_IP}/${cmd}`);
+  await fetch(`${ESP32_IP}/${cmd}`, { mode: "no-cors" });
   lastCommand = cmd;
+
   statusBox.innerText = "🟢 CONNECTED";
   statusBox.classList.add("connected");
+
 } catch {
   statusBox.innerText = "🔴 OFFLINE";
   statusBox.classList.remove("connected");
@@ -79,17 +83,17 @@ try {
 
 }
 
-function mapGesture(gesture) {
-if (gesture === "None") return sendCommand("stop");
+function mapGesture(g) {
+if (g === "None") return sendCommand("stop");
 
 ```
-if (gesture === "Thumb_Up") sendCommand("forward");
-else if (gesture === "Thumb_Down") sendCommand("backward");
-else if (gesture === "Open_Palm") sendCommand("stop");
-else if (gesture === "Pointing_Up") sendCommand("move_left");
-else if (gesture === "Victory") sendCommand("move_right");
-else if (gesture === "Closed_Fist") sendCommand("turn_left");
-else if (gesture === "ILoveYou") sendCommand("turn_right");
+if (g === "Thumb_Up") sendCommand("forward");
+else if (g === "Thumb_Down") sendCommand("backward");
+else if (g === "Open_Palm") sendCommand("stop");
+else if (g === "Pointing_Up") sendCommand("move_left");
+else if (g === "Victory") sendCommand("move_right");
+else if (g === "Closed_Fist") sendCommand("turn_left");
+else if (g === "ILoveYou") sendCommand("turn_right");
 ```
 
 }
@@ -99,73 +103,85 @@ gestureHistory.push(g);
 if (gestureHistory.length > 7) gestureHistory.shift();
 
 ```
-const counts = {};
-gestureHistory.forEach(x => counts[x] = (counts[x] || 0) + 1);
+const count = {};
+gestureHistory.forEach(x => count[x] = (count[x] || 0) + 1);
 
-return Object.keys(counts).reduce((a,b)=>counts[a]>counts[b]?a:b);
+return Object.keys(count).reduce((a, b) =>
+  count[a] > count[b] ? a : b
+);
 ```
 
 }
 
+function getIcon(g) {
+return {
+Thumb_Up: "⬆️",
+Thumb_Down: "⬇️",
+Open_Palm: "⛔",
+Pointing_Up: "↖️",
+Victory: "↗️",
+Closed_Fist: "⟲",
+ILoveYou: "⟳"
+}[g] || "❓";
+}
+
 function drawHand(landmarks) {
-const mirrorX = x => canvas.width - x * canvas.width;
 
 ```
-ctx.strokeStyle = "rgba(0,255,255,0.6)";
-ctx.lineWidth = 1.5;
+const mirrorX = x => canvas.width - x * canvas.width;
 
-const connections = [
-  [0,1],[1,2],[2,3],[3,4],
-  [0,5],[5,6],[6,7],[7,8],
-  [5,9],[9,10],[10,11],[11,12],
-  [9,13],[13,14],[14,15],[15,16],
-  [13,17],[17,18],[18,19],[19,20],
-  [0,17]
-];
+ctx.strokeStyle = "rgba(0,255,255,0.3)";
+ctx.lineWidth = 1;
 
-connections.forEach(([i,j]) => {
-  ctx.beginPath();
-  ctx.moveTo(mirrorX(landmarks[i].x), landmarks[i].y * canvas.height);
-  ctx.lineTo(mirrorX(landmarks[j].x), landmarks[j].y * canvas.height);
-  ctx.stroke();
-});
+for (let i = 0; i < landmarks.length; i++) {
+  for (let j = i + 1; j < landmarks.length; j++) {
 
+    const x1 = mirrorX(landmarks[i].x);
+    const y1 = landmarks[i].y * canvas.height;
+    const x2 = mirrorX(landmarks[j].x);
+    const y2 = landmarks[j].y * canvas.height;
+
+    if (Math.hypot(x1 - x2, y1 - y2) < 60) {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    }
+  }
+}
+
+ctx.fillStyle = "cyan";
 landmarks.forEach(pt => {
   const x = mirrorX(pt.x);
   const y = pt.y * canvas.height;
-
-  const g = ctx.createRadialGradient(x,y,2,x,y,6);
-  g.addColorStop(0,"#00ffff");
-  g.addColorStop(1,"transparent");
-
-  ctx.fillStyle = g;
   ctx.beginPath();
-  ctx.arc(x,y,6,0,2*Math.PI);
+  ctx.arc(x, y, 3, 0, 2 * Math.PI);
   ctx.fill();
 });
 ```
 
 }
 
-async function loop() {
-const now = performance.now();
+function loop() {
 
 ```
-ctx.clearRect(0,0,canvas.width,canvas.height);
+const now = performance.now();
+
+ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 ctx.save();
-ctx.scale(-1,1);
-ctx.drawImage(video,-canvas.width,0,canvas.width,canvas.height);
+ctx.scale(-1, 1);
+ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
 ctx.restore();
 
-const res = recognizer.recognizeForVideo(video, now);
+const result = recognizer.recognizeForVideo(video, now);
 
 let gesture = "None";
 let confidence = 0;
 
-if (res.gestures.length > 0) {
-  gesture = res.gestures[0][0].categoryName;
-  confidence = res.gestures[0][0].score;
+if (result.gestures.length > 0) {
+  gesture = result.gestures[0][0].categoryName;
+  confidence = result.gestures[0][0].score;
   noHandFrames = 0;
 } else {
   noHandFrames++;
@@ -174,14 +190,17 @@ if (res.gestures.length > 0) {
 if (noHandFrames > 10) gesture = "None";
 
 const stable = smoothGesture(gesture);
+
 mapGesture(stable);
 
-gestureText.innerText = `${stable} (${(confidence*100).toFixed(0)}%)`;
-iconBox.innerText = stable;
+gestureText.innerText = `${stable} (${(confidence * 100).toFixed(0)}%)`;
+iconBox.innerText = getIcon(stable);
 
-if (res.landmarks.length > 0) drawHand(res.landmarks[0]);
+if (result.landmarks.length > 0) {
+  drawHand(result.landmarks[0]);
+}
 
-const fps = 1000/(now-lastTime);
+const fps = 1000 / (now - lastTime);
 lastTime = now;
 fpsText.innerText = `${fps.toFixed(1)} FPS`;
 
@@ -193,4 +212,4 @@ requestAnimationFrame(loop);
 loop();
 }
 
-init(console.log("Init started"));
+init();
