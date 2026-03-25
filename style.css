@@ -2,7 +2,7 @@ body {
 margin: 0;
 overflow: hidden;
 font-family: 'Poppins', sans-serif;
-background: #000;
+background: black;
 }
 
 #container {
@@ -45,14 +45,14 @@ position: absolute;
 bottom: 25px;
 left: 50%;
 transform: translateX(-50%);
-background: rgba(20,20,20,0.55);
+background: rgba(20,20,20,0.6);
 backdrop-filter: blur(20px);
 padding: 18px 28px;
 border-radius: 25px;
+color: white;
 text-align: center;
 width: 85%;
 max-width: 420px;
-color: white;
 }
 
 #icon {
@@ -61,6 +61,7 @@ font-size: 42px;
 
 #gesture {
 font-size: 24px;
+font-weight: 600;
 color: #00ffd5;
 }
 
@@ -82,17 +83,40 @@ border-radius: 50%;
 cursor: pointer;
 }
 
-/* HELP PANEL */
-#helpPanel {
+/* HELP MENU */
+#helpMenu {
 position: absolute;
-bottom: 160px;
-right: 20px;
-width: 260px;
-background: rgba(20,20,20,0.9);
+bottom: 0;
+width: 100%;
+background: rgba(20,20,20,0.95);
 color: white;
-padding: 15px;
-border-radius: 15px;
-display: none;
+padding: 20px;
+border-radius: 20px 20px 0 0;
+transform: translateY(100%);
+transition: transform 0.3s ease;
+}
+
+#helpMenu.active {
+transform: translateY(0);
+}
+
+#helpMenu ul {
+list-style: none;
+padding: 0;
+}
+
+#helpMenu li {
+padding: 8px 0;
+border-bottom: 1px solid #333;
+}
+
+#helpMenu button {
+width: 100%;
+margin-top: 10px;
+padding: 10px;
+background: #00ffd5;
+border: none;
+border-radius: 10px;
 }
 
 /* LOADING */
