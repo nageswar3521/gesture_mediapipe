@@ -13,7 +13,7 @@ const statusBox = document.getElementById("status");
 const iconBox = document.getElementById("icon");
 
 // 🔴 CHANGE THIS
-const ESP32_IP = "http://192.168.29.119";
+const ESP32_IP = "http://10.128.114.1";
 
 let lastCommand = "";
 let lastTime = performance.now();
