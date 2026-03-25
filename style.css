@@ -1,74 +1,113 @@
 body {
-    margin: 0;
-    overflow: hidden;
-    font-family: 'Segoe UI', sans-serif;
-    background: black;
+margin: 0;
+overflow: hidden;
+font-family: 'Poppins', sans-serif;
+background: #000;
 }
 
 #container {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
+position: relative;
+width: 100vw;
+height: 100vh;
 }
 
 video {
-    display: none;
+display: none;
 }
 
 canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+position: absolute;
+width: 100%;
+height: 100%;
 }
 
-/* Status */
+/* STATUS (shifted upward) */
 #status {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    padding: 8px 14px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: bold;
-    background: red;
-    color: white;
+position: absolute;
+top: 60px;
+right: 20px;
+padding: 8px 16px;
+border-radius: 25px;
+font-size: 12px;
+font-weight: 600;
+background: rgba(255,0,0,0.8);
+color: white;
+backdrop-filter: blur(10px);
+transition: 0.3s;
 }
 
 .connected {
-    background: #00c853 !important;
+background: rgba(0,200,83,0.9) !important;
+box-shadow: 0 0 10px #00c853;
 }
 
-/* Info Panel */
+/* INFO PANEL */
 #info {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(15px);
-    padding: 15px 25px;
-    border-radius: 20px;
-    color: white;
-    text-align: center;
-    width: 85%;
-    max-width: 400px;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+position: absolute;
+bottom: 25px;
+left: 50%;
+transform: translateX(-50%);
+background: rgba(20,20,20,0.6);
+backdrop-filter: blur(20px);
+padding: 18px 28px;
+border-radius: 25px;
+color: white;
+text-align: center;
+width: 85%;
+max-width: 420px;
 }
 
 #icon {
-    font-size: 40px;
-    margin-bottom: 5px;
+font-size: 42px;
 }
 
 #gesture {
-    font-size: 22px;
-    font-weight: bold;
-    color: #00ffcc;
+font-size: 24px;
+color: #00ffd5;
 }
 
 #fps {
-    font-size: 14px;
-    color: #ccc;
+font-size: 13px;
+color: #aaa;
+}
+
+/* LOADING */
+#loading {
+position: absolute;
+width: 100%;
+height: 100%;
+background: black;
+color: white;
+display: flex;
+justify-content: center;
+align-items: center;
+font-size: 18px;
+z-index: 10;
+}
+
+/* HELP BUTTON */
+#helpBtn {
+position: absolute;
+bottom: 110px;
+right: 20px;
+font-size: 22px;
+background: rgba(0,0,0,0.6);
+color: white;
+padding: 10px 14px;
+border-radius: 50%;
+cursor: pointer;
+}
+
+/* HELP PANEL */
+#helpPanel {
+position: absolute;
+bottom: 170px;
+right: 20px;
+width: 220px;
+background: rgba(0,0,0,0.85);
+color: white;
+padding: 15px;
+border-radius: 15px;
+display: none;
+font-size: 13px;
 }
