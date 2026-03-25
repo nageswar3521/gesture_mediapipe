@@ -1,6 +1,6 @@
 import {
-  GestureRecognizer,
-  FilesetResolver
+GestureRecognizer,
+FilesetResolver
 } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest";
 
 const video = document.getElementById("webcam");
@@ -11,189 +11,188 @@ const gestureText = document.getElementById("gesture");
 const fpsText = document.getElementById("fps");
 const statusBox = document.getElementById("status");
 const iconBox = document.getElementById("icon");
+const loading = document.getElementById("loading");
 
-// 🔴 CHANGE THIS
+// Help UI
+const helpBtn = document.getElementById("helpBtn");
+const helpPanel = document.getElementById("helpPanel");
+
+helpBtn.onclick = () => {
+helpPanel.style.display =
+helpPanel.style.display === "block" ? "none" : "block";
+};
+
 const ESP32_IP = "http://10.128.114.1";
 
 let lastCommand = "";
 let lastTime = performance.now();
 let gestureHistory = [];
+let noHandFrames = 0;
 
-// ================= CAMERA =================
+// CAMERA
 async function setupCamera() {
-  const stream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: "user" }
-  });
-  video.srcObject = stream;
-
-  return new Promise((resolve) => {
-    video.onloadedmetadata = () => resolve(video);
-  });
+const stream = await navigator.mediaDevices.getUserMedia({
+video: { facingMode: "user" }
+});
+video.srcObject = stream;
+return new Promise(res => video.onloadedmetadata = () => res(video));
 }
 
-// ================= INIT =================
+// INIT
 async function init() {
-  const vision = await FilesetResolver.forVisionTasks(
-    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-  );
 
-  const recognizer = await GestureRecognizer.createFromOptions(vision, {
-    baseOptions: {
-      modelAssetPath: "./gesture_recognizer.task"
-    },
-    runningMode: "VIDEO",
-    numHands: 1
-  });
+const vision = await FilesetResolver.forVisionTasks(
+"https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+);
 
-  await setupCamera();
+const recognizer = await GestureRecognizer.createFromOptions(vision, {
+baseOptions: { modelAssetPath: "./gesture_recognizer.task" },
+runningMode: "VIDEO",
+numHands: 1
+});
 
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
+await setupCamera();
 
-  // ================= ESP32 =================
-  async function sendCommand(cmd) {
-    if (cmd === lastCommand) return;
+canvas.width = video.videoWidth;
+canvas.height = video.videoHeight;
 
-    try {
-      await fetch(`${ESP32_IP}/${cmd}`);
-      lastCommand = cmd;
+loading.style.display = "none";
 
-      statusBox.innerText = "CONNECTED";
-      statusBox.classList.add("connected");
+async function sendCommand(cmd) {
+if (cmd === lastCommand) return;
 
-    } catch {
-      statusBox.innerText = "OFFLINE";
-      statusBox.classList.remove("connected");
-    }
-  }
+```
+try {
+  await fetch(`${ESP32_IP}/${cmd}`, { mode: "no-cors" });
+  lastCommand = cmd;
+  statusBox.innerText = "🟢 CONNECTED";
+  statusBox.classList.add("connected");
+} catch {
+  statusBox.innerText = "🔴 OFFLINE";
+  statusBox.classList.remove("connected");
+}
+```
 
-  // ================= GESTURE MAPPING =================
-  function mapGesture(gesture) {
+}
 
-    // AUTO STOP (SAFETY)
-    if (gesture === "None") {
-      sendCommand("stop");
-      return;
-    }
+function mapGesture(g) {
+if (g === "None") return sendCommand("stop");
 
-    if (gesture === "Thumb_Up") sendCommand("forward");
-    else if (gesture === "Thumb_Down") sendCommand("backward");
-    else if (gesture === "Open_Palm") sendCommand("stop");
+```
+const map = {
+  Thumb_Up: "forward",
+  Thumb_Down: "backward",
+  Open_Palm: "stop",
+  Pointing_Up: "move_left",
+  Victory: "move_right",
+  Closed_Fist: "turn_left",
+  ILoveYou: "turn_right"
+};
 
-    // CURVE MOVEMENT
-    else if (gesture === "Pointing_Up") sendCommand("move_left");
-    else if (gesture === "Victory") sendCommand("move_right");
+if (map[g]) sendCommand(map[g]);
+```
 
-    // ROTATION
-    else if (gesture === "Closed_Fist") sendCommand("turn_left");
-    else if (gesture === "ILoveYou") sendCommand("turn_right");
-  }
+}
 
-  // ================= ICON =================
-  function getGestureIcon(gesture) {
-    switch (gesture) {
-      case "Thumb_Up": return "⬆️";
-      case "Thumb_Down": return "⬇️";
-      case "Open_Palm": return "⛔";
-      case "Pointing_Up": return "↖️";
-      case "Victory": return "↗️";
-      case "Closed_Fist": return "⟲";
-      case "ILoveYou": return "⟳";
-      default: return "❓";
-    }
-  }
+function smoothGesture(g) {
+gestureHistory.push(g);
+if (gestureHistory.length > 7) gestureHistory.shift();
 
-  // ================= SMOOTHING =================
-  function smoothGesture(gesture) {
-    gestureHistory.push(gesture);
-    if (gestureHistory.length > 5) gestureHistory.shift();
+```
+const count = {};
+gestureHistory.forEach(x => count[x] = (count[x]||0)+1);
 
-    return gestureHistory.sort((a,b) =>
-      gestureHistory.filter(v => v===a).length -
-      gestureHistory.filter(v => v===b).length
-    ).pop();
-  }
+return Object.keys(count).reduce((a,b)=>count[a]>count[b]?a:b);
+```
 
-  // ================= DRAW HAND =================
-  function drawHand(landmarks) {
-    const connections = [
-      [0,1],[1,2],[2,3],[3,4],
-      [0,5],[5,6],[6,7],[7,8],
-      [5,9],[9,10],[10,11],[11,12],
-      [9,13],[13,14],[14,15],[15,16],
-      [13,17],[17,18],[18,19],[19,20],
-      [0,17]
-    ];
+}
 
-    const mirrorX = (x) => canvas.width - (x * canvas.width);
+function getIcon(g) {
+return {
+Thumb_Up:"⬆️", Thumb_Down:"⬇️", Open_Palm:"⛔",
+Pointing_Up:"↖️", Victory:"↗️",
+Closed_Fist:"⟲", ILoveYou:"⟳"
+}[g] || "❓";
+}
 
-    ctx.strokeStyle = "cyan";
-    ctx.lineWidth = 3;
+// FACE-MESH STYLE HAND
+function drawHand(landmarks) {
+const mirrorX = x => canvas.width - (x * canvas.width);
 
-    connections.forEach(([i, j]) => {
-      const x1 = mirrorX(landmarks[i].x);
-      const y1 = landmarks[i].y * canvas.height;
-      const x2 = mirrorX(landmarks[j].x);
-      const y2 = landmarks[j].y * canvas.height;
+```
+ctx.strokeStyle = "rgba(0,255,255,0.8)";
+ctx.shadowBlur = 10;
+ctx.shadowColor = "cyan";
 
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
-    });
+const conn = [
+  [0,1],[1,2],[2,3],[3,4],
+  [0,5],[5,6],[6,7],[7,8],
+  [5,9],[9,10],[10,11],[11,12],
+  [9,13],[13,14],[14,15],[15,16],
+  [13,17],[17,18],[18,19],[19,20],
+  [0,17]
+];
 
-    ctx.fillStyle = "yellow";
-    landmarks.forEach(pt => {
-      const x = mirrorX(pt.x);
-      const y = pt.y * canvas.height;
+conn.forEach(([i,j])=>{
+  ctx.beginPath();
+  ctx.moveTo(mirrorX(landmarks[i].x), landmarks[i].y*canvas.height);
+  ctx.lineTo(mirrorX(landmarks[j].x), landmarks[j].y*canvas.height);
+  ctx.stroke();
+});
 
-      ctx.beginPath();
-      ctx.arc(x, y, 5, 0, 2 * Math.PI);
-      ctx.fill();
-    });
-  }
+ctx.fillStyle = "#00ffff";
+landmarks.forEach((pt,i)=>{
+  ctx.beginPath();
+  ctx.arc(mirrorX(pt.x), pt.y*canvas.height, i===8?8:4, 0, 2*Math.PI);
+  ctx.fill();
+});
 
-  // ================= LOOP =================
-  async function loop() {
-    const now = performance.now();
+ctx.shadowBlur = 0;
+```
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
 
-    // Mirror camera
-    ctx.save();
-    ctx.scale(-1, 1);
-    ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
-    ctx.restore();
+async function loop() {
+const now = performance.now();
 
-    const result = recognizer.recognizeForVideo(video, now);
+```
+ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    let gesture = "None";
-    let confidence = 0;
+ctx.save();
+ctx.scale(-1,1);
+ctx.drawImage(video,-canvas.width,0,canvas.width,canvas.height);
+ctx.restore();
 
-    if (result.gestures.length > 0) {
-      gesture = result.gestures[0][0].categoryName;
-      confidence = result.gestures[0][0].score;
-    }
+const res = recognizer.recognizeForVideo(video, now);
 
-    const stableGesture = smoothGesture(gesture);
+let g="None", conf=0;
 
-    mapGesture(stableGesture);
+if (res.gestures.length>0){
+  g = res.gestures[0][0].categoryName;
+  conf = res.gestures[0][0].score;
+  noHandFrames=0;
+} else noHandFrames++;
 
-    gestureText.innerText = `${stableGesture} (${(confidence*100).toFixed(0)}%)`;
-    iconBox.innerText = getGestureIcon(stableGesture);
+if (noHandFrames>10) g="None";
 
-    if (result.landmarks.length > 0) {
-      drawHand(result.landmarks[0]);
-    }
+const stable = smoothGesture(g);
+mapGesture(stable);
 
-    const fps = 1000 / (now - lastTime);
-    lastTime = now;
-    fpsText.innerText = `${fps.toFixed(1)} FPS`;
+gestureText.innerText = `${stable} (${(conf*100).toFixed(0)}%)`;
+iconBox.innerText = getIcon(stable);
 
-    requestAnimationFrame(loop);
-  }
+if (res.landmarks.length>0) drawHand(res.landmarks[0]);
 
-  loop();
+const fps = 1000/(now-lastTime);
+lastTime=now;
+fpsText.innerText = `${fps.toFixed(1)} FPS`;
+
+requestAnimationFrame(loop);
+```
+
+}
+
+loop();
 }
 
 init();
