@@ -10,7 +10,7 @@ body {
     width: 100vw;
     height: 100vh;
 
-    /* Safe area (notch support) */
+    /* Safe area (for notch phones) */
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
 }
@@ -30,6 +30,7 @@ canvas {
 /* ================= FLOATING TOAST ================= */
 #status {
     position: absolute;
+
     top: 10px;
     left: 50%;
     transform: translateX(-50%);
@@ -57,7 +58,7 @@ canvas {
 #info {
     position: absolute;
 
-    /* 🔥 FIX: Always visible above mobile UI */
+    /* 🔥 Proper upward shift */
     bottom: max(30px, calc(20px + env(safe-area-inset-bottom)));
 
     left: 50%;
@@ -98,17 +99,23 @@ canvas {
     position: absolute;
     top: 20px;
     left: 20px;
+
     width: 42px;
     height: 42px;
+
     border-radius: 50%;
     background: rgba(0,0,0,0.6);
+
     color: white;
     font-size: 22px;
+
     display: flex;
     align-items: center;
     justify-content: center;
+
     cursor: pointer;
     backdrop-filter: blur(10px);
+
     z-index: 10;
 }
 
@@ -117,12 +124,16 @@ canvas {
     position: absolute;
     top: 70px;
     left: 20px;
+
     width: 260px;
     max-width: 80%;
+
     background: rgba(0,0,0,0.85);
     color: white;
+
     padding: 15px;
     border-radius: 15px;
+
     display: none;
     z-index: 10;
 }
@@ -136,7 +147,7 @@ canvas {
     font-size: 14px;
 }
 
-/* ================= MOBILE ================= */
+/* ================= MOBILE OPTIMIZATION ================= */
 @media (max-width: 600px) {
 
     #status {
@@ -149,8 +160,8 @@ canvas {
         width: 90%;
         padding: 12px 15px;
 
-        /* 🔥 EXTRA SHIFT for small screens */
-        bottom: max(40px, calc(30px + env(safe-area-inset-bottom)));
+        /* 🔥 extra safe shift for mobile */
+        bottom: max(40px, calc(25px + env(safe-area-inset-bottom)));
     }
 
     #icon {
