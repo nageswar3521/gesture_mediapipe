@@ -3,6 +3,7 @@ import {
   FilesetResolver
 } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest";
 
+// DOM
 const video = document.getElementById("webcam");
 const canvas = document.getElementById("output");
 const ctx = canvas.getContext("2d");
@@ -12,12 +13,21 @@ const fpsText = document.getElementById("fps");
 const statusBox = document.getElementById("status");
 const iconBox = document.getElementById("icon");
 
-// 🔴 CHANGE THIS
+const helpBtn = document.getElementById("helpBtn");
+const helpPanel = document.getElementById("helpPanel");
+
+// ESP32 IP
 const ESP32_IP = "http://192.168.29.119";
 
 let lastCommand = "";
 let lastTime = performance.now();
 let gestureHistory = [];
+
+// ================= HELP TOGGLE =================
+helpBtn.onclick = () => {
+  helpPanel.style.display =
+    helpPanel.style.display === "block" ? "none" : "block";
+};
 
 // ================= CAMERA =================
 async function setupCamera() {
@@ -67,10 +77,9 @@ async function init() {
     }
   }
 
-  // ================= GESTURE MAPPING =================
+  // ================= GESTURE =================
   function mapGesture(gesture) {
 
-    // AUTO STOP (SAFETY)
     if (gesture === "None") {
       sendCommand("stop");
       return;
@@ -79,17 +88,12 @@ async function init() {
     if (gesture === "Thumb_Up") sendCommand("forward");
     else if (gesture === "Thumb_Down") sendCommand("backward");
     else if (gesture === "Open_Palm") sendCommand("stop");
-
-    // CURVE MOVEMENT
     else if (gesture === "Pointing_Up") sendCommand("move_left");
     else if (gesture === "Victory") sendCommand("move_right");
-
-    // ROTATION
     else if (gesture === "Closed_Fist") sendCommand("turn_left");
     else if (gesture === "ILoveYou") sendCommand("turn_right");
   }
 
-  // ================= ICON =================
   function getGestureIcon(gesture) {
     switch (gesture) {
       case "Thumb_Up": return "⬆️";
@@ -103,7 +107,6 @@ async function init() {
     }
   }
 
-  // ================= SMOOTHING =================
   function smoothGesture(gesture) {
     gestureHistory.push(gesture);
     if (gestureHistory.length > 5) gestureHistory.shift();
@@ -114,7 +117,6 @@ async function init() {
     ).pop();
   }
 
-  // ================= DRAW HAND =================
   function drawHand(landmarks) {
     const connections = [
       [0,1],[1,2],[2,3],[3,4],
@@ -153,13 +155,11 @@ async function init() {
     });
   }
 
-  // ================= LOOP =================
   async function loop() {
     const now = performance.now();
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Mirror camera
     ctx.save();
     ctx.scale(-1, 1);
     ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
