@@ -30,8 +30,6 @@ canvas {
 /* ================= FLOATING TOAST ================= */
 #status {
     position: absolute;
-
-    /* Center top */
     top: 10px;
     left: 50%;
     transform: translateX(-50%);
@@ -48,30 +46,34 @@ canvas {
     box-shadow: 0 4px 15px rgba(0,0,0,0.4);
 
     z-index: 20;
-
-    /* Smooth animation */
     transition: all 0.3s ease;
 }
 
-/* Connected state */
 .connected {
     background: #00c853 !important;
 }
 
-/* ================= INFO PANEL ================= */
+/* ================= INFO PANEL (FIXED POSITION) ================= */
 #info {
     position: absolute;
-    bottom: 20px;
+
+    /* 🔥 FIX: Always visible above mobile UI */
+    bottom: max(30px, calc(20px + env(safe-area-inset-bottom)));
+
     left: 50%;
     transform: translateX(-50%);
+
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(15px);
     padding: 15px 25px;
     border-radius: 20px;
+
     color: white;
     text-align: center;
+
     width: 85%;
     max-width: 400px;
+
     box-shadow: 0 8px 25px rgba(0,0,0,0.5);
 }
 
@@ -146,7 +148,9 @@ canvas {
     #info {
         width: 90%;
         padding: 12px 15px;
-        bottom: 10px;
+
+        /* 🔥 EXTRA SHIFT for small screens */
+        bottom: max(40px, calc(30px + env(safe-area-inset-bottom)));
     }
 
     #icon {
